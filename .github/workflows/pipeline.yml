@@ -107,7 +107,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install huggingface_hub pandas scikit-learn mlflow xgboost python-dotenv
+          pip install huggingface_hub pandas scikit-learn mlflow xgboost python-dotenv joblib
 
       - name: Start MLflow Server
         run: |
@@ -119,7 +119,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           python - <<EOF
-          import os, pickle, mlflow, mlflow.sklearn, pandas as pd
+          import os, joblib, mlflow, mlflow.sklearn, pandas as pd
           from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
           from sklearn.model_selection import GridSearchCV
           from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
@@ -176,18 +176,17 @@ jobs:
               mlflow.log_metric("roc_auc",   roc_auc_score(y_test, y_pred))
               mlflow.sklearn.log_model(best_gb, "gradient_boosting_model")
 
-          # Save best model
+          # Select and save best model
           best_model = best_rf if f1_rf >= f1_gb else best_gb
           best_name  = "RandomForest" if f1_rf >= f1_gb else "GradientBoosting"
           print(f"Best model: {best_name}")
 
           os.makedirs("tourism_project/model_building", exist_ok=True)
-          with open("tourism_project/model_building/best_model.pkl", "wb") as f:
-              pickle.dump(best_model, f)
+          joblib.dump(best_model, "tourism_project/model_building/best_model.joblib")
 
           api.upload_file(
-              path_or_fileobj="tourism_project/model_building/best_model.pkl",
-              path_in_repo="best_model.pkl",
+              path_or_fileobj="tourism_project/model_building/best_model.joblib",
+              path_in_repo="best_model.joblib",
               repo_id="SANGU19/tourism-model",
               repo_type="model"
           )
@@ -216,9 +215,9 @@ jobs:
           api = HfApi()
 
           files_to_upload = [
-              ("tourism_project/deployment/app.py",          "app.py"),
-              ("tourism_project/deployment/requirements.txt","requirements.txt"),
-              ("tourism_project/deployment/Dockerfile",      "Dockerfile"),
+              ("tourism_project/deployment/app.py",           "app.py"),
+              ("tourism_project/deployment/requirements.txt", "requirements.txt"),
+              ("tourism_project/deployment/Dockerfile",       "Dockerfile"),
           ]
 
           for local_path, repo_path in files_to_upload:
