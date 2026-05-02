@@ -1,18 +1,8 @@
 import streamlit as st
-import joblib
+import pickle
 import pandas as pd
 from huggingface_hub import hf_hub_download
 import os
-
-try:
-    import sklearn, numpy, joblib
-    st.write("sklearn:", sklearn.__version__)
-    st.write("numpy:", numpy.__version__)
-    st.write("joblib:", joblib.__version__)
-    import sys
-    st.write("python:", sys.version)
-except Exception as e:
-    st.error(str(e))
 
 # Page config
 st.set_page_config(
@@ -29,10 +19,11 @@ st.markdown("Fill in the customer details below to predict whether they will pur
 def load_model():
     model_path = hf_hub_download(
         repo_id="SANGU19/tourism-model",
-        filename="best_model.joblib",
+        filename="best_model.pkl",
         token=os.environ.get("HF_TOKEN")
     )
-    model = joblib.load(model_path)
+    with open(model_path, "rb") as f:
+        model = pickle.load(f)
     return model
 
 try:
@@ -69,7 +60,7 @@ with col2:
     passport = st.selectbox("Passport", ["Yes", "No"])
     own_car = st.selectbox("Own Car", ["Yes", "No"])
 
-# Encode categorical inputs
+# Encode categorical inputs — sorted alphabetically to match LabelEncoder behavior
 def encode(value, categories):
     categories_sorted = sorted(categories)
     return categories_sorted.index(value)
@@ -105,6 +96,6 @@ if st.button("Predict", use_container_width=True):
 
     st.divider()
     if prediction == 1:
-        st.success("✅ Customer is **likely to purchase** the Wellness Package")
+        st.success(f"✅ Customer is **likely to purchase** the Wellness Package  \nConfidence: {probability:.1%}")
     else:
-        st.error("❌ Customer is **unlikely to purchase** the Wellness Package")
+        st.error(f"❌ Customer is **unlikely to purchase** the Wellness Package  \nConfidence: {1 - probability:.1%}")
