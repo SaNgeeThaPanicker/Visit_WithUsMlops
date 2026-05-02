@@ -4,16 +4,6 @@ import pandas as pd
 from huggingface_hub import hf_hub_download
 import os
 
-try:
-    import sklearn, numpy, joblib
-    st.write("sklearn:", sklearn.__version__)
-    st.write("numpy:", numpy.__version__)
-    st.write("joblib:", joblib.__version__)
-    import sys
-    st.write("python:", sys.version)
-except Exception as e:
-    st.error(str(e))
-
 # Page config
 st.set_page_config(
     page_title="Tourism Package Predictor",
