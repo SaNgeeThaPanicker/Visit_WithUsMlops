@@ -1,9 +1,11 @@
-import os, pickle, pandas as pd
+import os
+import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import f1_score
 from huggingface_hub import HfApi, login
 from dotenv import load_dotenv
+import joblib
 
 load_dotenv()
 login(token=os.getenv("HF_TOKEN"))
@@ -30,15 +32,16 @@ best_model = gb_grid.best_estimator_
 y_pred = best_model.predict(X_test)
 print(f"F1 Score: {f1_score(y_test, y_pred):.4f}")
 
-# Save and upload
+# Save with joblib instead of pickle
 os.makedirs("tourism_project/model_building", exist_ok=True)
-with open("tourism_project/model_building/best_model.pkl", "wb") as f:
-    pickle.dump(best_model, f)
+joblib.dump(best_model, "tourism_project/model_building/best_model.joblib")
+print("Model saved with joblib")
 
+# Upload to HF
 api.upload_file(
-    path_or_fileobj="tourism_project/model_building/best_model.pkl",
-    path_in_repo="best_model.pkl",
+    path_or_fileobj="tourism_project/model_building/best_model.joblib",
+    path_in_repo="best_model.joblib",
     repo_id="SANGU19/tourism-model",
     repo_type="model"
 )
-print("Model retrained and uploaded successfully")
+print("Model uploaded to HF successfully")

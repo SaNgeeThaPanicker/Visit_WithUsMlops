@@ -5,6 +5,7 @@ import numpy as np
 from huggingface_hub import hf_hub_download
 from dotenv import load_dotenv
 import os
+import joblib
 
 # Load environment
 load_dotenv()
@@ -20,19 +21,15 @@ st.set_page_config(
 st.title("✈️ Wellness Tourism Package Predictor")
 st.markdown("Fill in the customer details below to predict whether they will purchase the package.")
 
-# Load model from Hugging Face
 @st.cache_resource
 def load_model():
     model_path = hf_hub_download(
         repo_id="SANGU19/tourism-model",
-        filename="best_model.pkl",
+        filename="best_model.joblib",
         token=HF_TOKEN
     )
-    with open(model_path, "rb") as f:
-        model = pickle.load(f)
+    model = joblib.load(model_path)
     return model
-
-model = load_model()
 
 # Input form
 st.subheader("Customer Details")
