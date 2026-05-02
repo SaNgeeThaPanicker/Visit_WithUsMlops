@@ -1,15 +1,8 @@
 import streamlit as st
-import pickle
-import pandas as pd
-import numpy as np
-from huggingface_hub import hf_hub_download
-from dotenv import load_dotenv
-import os
 import joblib
-
-# Load environment
-load_dotenv()
-HF_TOKEN = os.getenv("HF_TOKEN")
+import pandas as pd
+from huggingface_hub import hf_hub_download
+import os
 
 # Page config
 st.set_page_config(
@@ -21,15 +14,23 @@ st.set_page_config(
 st.title("✈️ Wellness Tourism Package Predictor")
 st.markdown("Fill in the customer details below to predict whether they will purchase the package.")
 
+# Load model from Hugging Face
 @st.cache_resource
 def load_model():
     model_path = hf_hub_download(
         repo_id="SANGU19/tourism-model",
         filename="best_model.joblib",
-        token=HF_TOKEN
+        token=os.environ.get("HF_TOKEN")
     )
     model = joblib.load(model_path)
     return model
+
+try:
+    model = load_model()
+    st.success("Model loaded successfully")
+except Exception as e:
+    st.error(f"Failed to load model: {e}")
+    st.stop()
 
 # Input form
 st.subheader("Customer Details")
@@ -58,7 +59,7 @@ with col2:
     passport = st.selectbox("Passport", ["Yes", "No"])
     own_car = st.selectbox("Own Car", ["Yes", "No"])
 
-# Encode categorical inputs the same way LabelEncoder would (alphabetical order)
+# Encode categorical inputs
 def encode(value, categories):
     categories_sorted = sorted(categories)
     return categories_sorted.index(value)
@@ -94,8 +95,8 @@ if st.button("Predict", use_container_width=True):
 
     st.divider()
     if prediction == 1:
-        st.success(f"✅ Customer is **likely to purchase** the Wellness Package")
+        st.success("✅ Customer is **likely to purchase** the Wellness Package")
     else:
-        st.error(f"❌ Customer is **unlikely to purchase** the Wellness Package")
+        st.error("❌ Customer is **unlikely to purchase** the Wellness Package")
 
     st.metric("Purchase Probability", f"{probability * 100:.1f}%")
