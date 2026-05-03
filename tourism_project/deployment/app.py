@@ -1,5 +1,5 @@
 import streamlit as st
-import pickle
+import joblib
 import pandas as pd
 from huggingface_hub import hf_hub_download
 import os
@@ -18,31 +18,17 @@ st.markdown("Fill in the customer details below to predict whether they will pur
 @st.cache_resource
 def load_model():
     token = os.environ.get("HF_TOKEN")
-    
-    # Show clear error if token is missing
+
     if not token:
         st.error("HF_TOKEN secret is not set. Go to Space Settings → Secrets and add HF_TOKEN.")
         st.stop()
-    
+
     model_path = hf_hub_download(
         repo_id="SANGU19/tourism-model",
-        filename="best_model.pkl",
+        filename="best_model.joblib",
         token=token
     )
-    with open(model_path, "rb") as f:
-        model = pickle.load(f)
-    return model
-
-# Load model from Hugging Face
-@st.cache_resource
-def load_model():
-    model_path = hf_hub_download(
-        repo_id="SANGU19/tourism-model",
-        filename="best_model.pkl",
-        token=os.environ.get("HF_TOKEN")
-    )
-    with open(model_path, "rb") as f:
-        model = pickle.load(f)
+    model = joblib.load(model_path)
     return model
 
 try:
